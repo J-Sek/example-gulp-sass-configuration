@@ -9,6 +9,7 @@ Additionally I'll try to integrate few tweaks making workflow less shameful in 2
 1. Add livereload if it might work with ASP.NET
 1. Accept --force or add 'clean' task
 1. Add *.csproj with configuration
+1. Add gulp-notify to inform about compilation errors
 
 ## Tests
 

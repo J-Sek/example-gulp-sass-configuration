@@ -2,6 +2,8 @@ gulp = require 'gulp'
 $ = require('gulp-load-plugins')()
 compass = require 'compass-importer'
 execSync = require('child_process').execSync
+watch = require 'glob-watcher'
+sassGraph = require 'gulp-sass-graph'
 
 # ##########################
 # Constants
@@ -38,7 +40,7 @@ cleanAttributesSync = (path) ->
 # Parsing arguments
 #
 
-SASS_FILES = getArgument('--scope', (dir) => `Content/Sass/${dir}/**/*.scss`) or SASS_PATHS
+SASS_FILES = getArgument('--scope', (dir) => "Content/Sass/#{dir}/**/*.scss") or SASS_PATHS
 SASS_OUTPUT_STYLE = getArgument('--style') or 'expanded'
 
 # ##########################
@@ -47,13 +49,29 @@ SASS_OUTPUT_STYLE = getArgument('--style') or 'expanded'
 
 gulp.task 'sass', (done) ->
     cleanAttributesSync CSS_DIR
+
+    sassLoadPaths = SASS_DIR
     gulp.src SASS_FILES, base: SASS_DIR 
         .pipe $.plumber()
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
+            loadPath: sassLoadPaths
         .on 'error', $.sass.logError
         .pipe gulp.dest CSS_DIR
 
-gulp.task 'watch', ->
+gulp.task 'watch_old', ->
     gulp.watch SASS_FILES, ['sass']
+
+gulp.task 'watch', ->
+    sassLoadPaths = SASS_DIR
+    $.watch SASS_DIR + '/**/*.scss'
+        .pipe $.plumber()
+        .pipe sassGraph [sassLoadPaths]
+        .pipe $.sass 
+            importer: compass
+            outputStyle: SASS_OUTPUT_STYLE
+            loadPath: sassLoadPaths
+        # .pipe $.notify 'Sass compiled <%= file.relative %>'
+        .pipe gulp.dest CSS_DIR
+        # .pipe livereload()
