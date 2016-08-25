@@ -3,14 +3,14 @@ $ = require('gulp-load-plugins')()
 compass = require 'compass-importer'
 execSync = require('child_process').execSync
 watch = require 'glob-watcher'
-sassGraph = require 'gulp-sass-graph'
+sassGraph = require './gulp-sass-graph'
 
 # ##########################
 # Constants
 #
 
 CSS_DIR = 'Content/Css'
-SASS_DIR = 'Content/Sass' 
+SASS_DIR = 'Content/Sass'
 SASS_PATHS = [
     'Content/Sass/base/**/*.scss'
     '!Content/Sass/base/_bootstrap/**/*.scss'
@@ -29,7 +29,7 @@ parseArgumentValue = (pattern) ->
 
 getArgument = (flag, wrapFn) ->
     value = parseArgumentValue(flag + "=[']([^']*)[']")
-    return unless value 
+    return unless value
     if wrapFn then wrapFn(value) else value
 
 cleanAttributesSync = (path) ->
@@ -51,7 +51,7 @@ gulp.task 'sass', (done) ->
     cleanAttributesSync CSS_DIR
 
     sassLoadPaths = SASS_DIR
-    gulp.src SASS_FILES, base: SASS_DIR 
+    gulp.src SASS_FILES, base: SASS_DIR
         .pipe $.plumber()
         .pipe $.sass
             importer: compass
@@ -68,7 +68,7 @@ gulp.task 'watch', ->
     $.watch SASS_DIR + '/**/*.scss'
         .pipe $.plumber()
         .pipe sassGraph [sassLoadPaths]
-        .pipe $.sass 
+        .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
             loadPath: sassLoadPaths

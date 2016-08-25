@@ -12,7 +12,7 @@ module.exports = function (loadPaths) {
 	var graph = {}
 
 	// adds a sass file to a graph of dependencies
-	var addToGraph = function(filepath, contents, parent) {
+	var addToGraph = function (filepath, contents, parent) {
 		var entry = graph[filepath] = graph[filepath] || {
 			path: filepath,
 			imports: [],
@@ -27,17 +27,17 @@ module.exports = function (loadPaths) {
 			if (!resolved) return false;
 
 			// recurse into dependencies if not already enumerated
-			if(!_.contains(entry.imports, resolved)) {
+			if (!_.contains(entry.imports, resolved)) {
 				entry.imports.push(resolved);
-				addToGraph(resolved, function() {
+				addToGraph(resolved, function () {
 					return fs.readFileSync((path.extname(resolved) != "" ?
-						resolved : resolved+".scss"),'utf8')
+						resolved : resolved + ".scss"), 'utf8')
 				}, filepath);
 			}
 		}
 
 		// add link back to parent
-		if(parent != null) {
+		if (parent != null) {
 			entry.importedBy.push(parent);
 		}
 
@@ -45,12 +45,12 @@ module.exports = function (loadPaths) {
 	}
 
 	// visits all files that are ancestors of the provided file
-	var visitAncestors = function(filepath, callback, visited) {
+	var visitAncestors = function (filepath, callback, visited) {
 		visited = visited || [];
 		var edges = graph[filepath].importedBy;
 
-		for(var i in edges) {
-			if(!_.contains(visited, edges[i])) {
+		for (var i in edges) {
+			if (!_.contains(visited, edges[i])) {
 				visited.push(edges[i]);
 				callback(graph[edges[i]]);
 				visitAncestors(edges[i], callback, visited);
@@ -59,91 +59,101 @@ module.exports = function (loadPaths) {
 	}
 
 	// parses the imports from sass
-	var sassImports = function(content) {
+	var sassImports = function (content) {
 		var re = /\@import (["'])(.+?)\1;/g, match = {}, results = [];
 
-            // strip comments
-            content = new String(content).replace(/\/\*.+?\*\/|\/\/.*(?=[\n\r])/g, '');
+		// strip comments
+		content = new String(content).replace(/\/\*.+?\*\/|\/\/.*(?=[\n\r])/g, '');
 
-    	// extract imports
-    	while (match = re.exec(content)) {
-    		results.push(match[2]);
-    	}
+		// extract imports
+		while (match = re.exec(content)) {
+			results.push(match[2]);
+		}
 
-    	return results;
-    };
+		return results
+			.filter(function (x) {
+				return x !== 'compass';
+			})
+			.filter(function (x) {
+				return !/compass\/.*/.test(x);
+			});
+	};
 
-    // resolve a relative path to an absolute path
-    var sassResolve = function(path, loadPaths) {
-    	for(var p in loadPaths) {
-    		var scssPath = loadPaths[p] + "/" + path + ".scss"
-    		if (fs.existsSync(scssPath)) {
-    			return scssPath;
-    		}
-    		var partialPath = scssPath.replace(/\/([^\/]*)$/, '/_$1');
-    		if (fs.existsSync(partialPath)) {
-    			return partialPath
-    		}
-    	}
+	// resolve a relative path to an absolute path
+	var sassResolve = function (path, loadPaths) {
+		for (var p in loadPaths) {
+			var scssPath = loadPaths[p] + "/" + path + ".scss"
+			if (fs.existsSync(scssPath)) {
+				return scssPath;
+			}
+			var partialPath = scssPath.replace(/\/([^\/]*)$/, '/_$1');
+			if (fs.existsSync(partialPath)) {
+				return partialPath
+			}
+		}
 
-    	console.warn("failed to resolve %s from ", path, loadPaths)
-    	return false;
-    }
+		console.warn("failed to resolve %s from ", path, loadPaths)
+		return false;
+	}
 
-    // builds the graph
-    _(loadPaths).forEach(function(path) {
-        _(glob.sync(path+"/**/*.scss", {})).forEach(function(file){
-        	if(!addToGraph(file, function() { return fs.readFileSync(file) })) {
-        		console.warn("failed to add %s to graph", file)
-        	}
-        });
-   	});
+	// builds the graph
+	_(loadPaths).forEach(function (path) {
+		_(glob.sync(path + "/**/*.scss", {})).forEach(function (file) {
+			if (!addToGraph(file, function () { return fs.readFileSync(file) })) {
+				console.warn("failed to add %s to graph", file)
+			}
+		});
+	});
 
-    return through.obj(function (file, enc, cb) {
-        if (file.isNull()) {
-                this.push(file);
-                return cb();
-        }
+	return through.obj(function (file, enc, cb) {
+		if (file.isNull()) {
+			this.push(file);
+			return cb();
+		}
 
-        if (file.isStream()) {
-            this.emit('error',
-            	new gutil.PluginError('gulp-sass-graph', 'Streaming not supported'));
-            return cb();
-        }
+		if (file.isStream()) {
+			this.emit('error', new gutil.PluginError('gulp-sass-graph', 'Streaming not supported'));
+			return cb();
+		}
 
-        fs.stat(file.path, function (err, stats) {
-            if (err) {
-                    // pass through if it doesn't exist
-                    if (err.code === 'ENOENT') {
-                            this.push(file);
-                            return cb();
-                    }
+		fs.stat(file.path, function (err, stats) {
+			if (err) {
+				// pass through if it doesn't exist
+				if (err.code === 'ENOENT') {
+					this.push(file);
+					return cb();
+				}
 
-                    this.emit('error', new gutil.PluginError('gulp-sass-graph', err));
-                    this.push(file);
-                    return cb();
-            }
+				this.emit('error', new gutil.PluginError('gulp-sass-graph', err));
+				this.push(file);
+				return cb();
+			}
 
-            var relativePath = file.path.substr(file.cwd.length+1);
-            console.log("processing %s", relativePath);
+			var relativePath = file.path.substr(file.cwd.length + 1).replace(/\\/g, '/');
 
-            if(!graph[relativePath]) {
-            	addToGraph(relativePath, function() { return file.contents.toString('utf8') });
-            }
+			if (!graph[relativePath]) {
+				addToGraph(relativePath, function () { return file.contents.toString('utf8') });
+			}
 
-            this.push(file);
+			if (relativePath.split('/').pop()[0] !== '_') {
+				console.log("processing %s", relativePath);
+				this.push(file);
+			}
 
-            // push ancestors into the pipeline
-            visitAncestors(relativePath, function(node){
-            	console.log("processing %s, which depends on %s", node.path, relativePath)
-            	this.push(new File({
-            		cwd: file.cwd,
-            		base: file.base,
-            		path: node.path
-            	}));
-            }.bind(this));
+			// push ancestors into the pipeline
+			visitAncestors(relativePath, function (node) {
+				console.log("processing %s", node.path)
+				//, which depends on %s", node.path, relativePath)
+				var ancestorPath = file.cwd + "\\" + node.path.replace(/\//g, '\\');
+				this.push(new File({
+					contents: new Buffer(fs.readFileSync(ancestorPath)),
+					cwd: file.cwd,
+					base: file.base,
+					path: node.path
+				}));
+			}.bind(this));
 
-            cb();
-        }.bind(this));
-    });
+			cb();
+		}.bind(this));
+	});
 };
