@@ -1,0 +1,19 @@
+{
+  "name": "example-gulp-sass-configuration",
+  "version": "0.0.1",
+  "description": "Example of efficient gulp-sass configuration",
+  "main": "index.js",
+  "scripts": {
+    "run": "gulp sass"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "coffee-script": "1.10.0",
+    "compass-importer": "0.3.0",
+    "gulp": "3.9.1",
+    "gulp-load-plugins": "1.2.4",
+    "gulp-plumber": "1.1.0",
+    "gulp-sass": "2.3.2"
+  }
+}
