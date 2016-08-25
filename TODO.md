@@ -17,3 +17,31 @@ Additionally I'll try to integrate few tweaks making workflow less shameful in 2
     - Add commands to prove execution times are lower
 1. Automatic test to measure watch delay
 1. Automatic test by calling msbuild
+
+## Required fixes in gulp-sass-graph/index.js:126
+
+```(js)
+var relativePath = file.path.substr(file.cwd.length+1).replace(/\\/g,'/');
+
+if(!graph[relativePath]) {
+    addToGraph(relativePath, function() { return file.contents.toString('utf8') });
+}
+
+if (relativePath.split('/').pop()[0] !== '_') {
+    console.log("processing %s", relativePath);
+    this.push(file);
+}
+
+// push ancestors into the pipeline
+visitAncestors(relativePath, function(node){
+    console.log("processing %s", node.path)
+    //, which depends on %s", node.path, relativePath)
+    var ancestorPath = file.cwd + "\\" + node.path.replace(/\//g,'\\');
+    this.push(new File({
+        contents: new Buffer(fs.readFileSync(ancestorPath)),
+        cwd: file.cwd,
+        base: file.base,
+        path: node.path
+    }));
+}.bind(this));
+```
