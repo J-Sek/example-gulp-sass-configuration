@@ -1,0 +1,9 @@
+{
+    "editor.tabSize": 4,
+    "files.trimTrailingWhitespace": true,
+    "editor.insertSpaces": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/node_modules": true
+    }
+}
