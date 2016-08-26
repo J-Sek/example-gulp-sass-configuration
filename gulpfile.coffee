@@ -63,7 +63,7 @@ gulp.task 'sass', (done) ->
 gulp.task 'watch_old', ->
     gulp.watch SASS_FILES, ['sass']
 
-gulp.task 'watch', ->
+gulp.task 'watch:sass', ->
     sassLoadPaths = SASS_DIR
     $.watch SASS_DIR + '/**/*.scss'
         .pipe $.plumber()
@@ -75,3 +75,20 @@ gulp.task 'watch', ->
         # .pipe $.notify 'Sass compiled <%= file.relative %>'
         .pipe gulp.dest CSS_DIR
         # .pipe livereload()
+
+# ##########################
+# Test
+#
+
+gulp.task 'test', ->
+    gulp.src 'test/**/*.coffee', read: false
+        .pipe $.plumber()
+        # $.notify 'Tests failed <%= error.message %>'
+        .pipe $.mocha reporter: 'progress'
+
+gulp.task 'watch:test', ->
+    gulp.watch [
+        '*.js'
+        '*.coffee'
+        'test/**/*.coffee'
+    ], ['test']

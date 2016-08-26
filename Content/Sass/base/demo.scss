@@ -1,5 +1,16 @@
-@import './colors';
+// TODO: support missing underline e.g. @import 'colors';
+
+@import '_colors';
+@import './_fonts';
+// TODO: support ../ e.g. @import '../_settings';
+
+@import 'compass';
+// @import 'compass/css/user-interface';
+// TODO: make ignored imports configurable by setting exact name or pattern
 
 body {
-    color: $red;
+    background: $bg-color;
+    color: $default-color;
+    font-family: $base-font;
+    @include box-sizing(border-box);
 }
