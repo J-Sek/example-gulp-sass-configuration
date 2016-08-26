@@ -44,15 +44,22 @@ testWatching = ({partialPath, content, changeFn, expectFn, next, delay}) ->
             log("Waiting 6000ms for demo.scss")
             setTimeout ->
                 log("Reading demo.scss")
+                _err = null
                 try
                     expect(-> fs.accessSync 'Content/Css/base/demo.css').to.not.throw(Error)
                     fs.accessSync 'Content/Css/base/demo.css'
                     newContent = fs.readFileSync 'Content/Css/base/demo.css', 'utf8'
                     expectFn(newContent)
+                catch err
+                    console.log 'Error:', _err
+
+                    _err = err
                 finally
                     # Terminate watching process
                     spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
-                    next()
+
+                throw _err if _err
+                next()
             , delay
         , delay
 
