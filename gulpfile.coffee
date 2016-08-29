@@ -5,6 +5,7 @@ execSync = require('child_process').execSync
 watch = require 'glob-watcher'
 sassGraph = require './gulp-sass-graph'
 FileCache = require 'gulp-file-cache'
+rimraf = require 'rimraf'
 
 # ##########################
 # Constants
@@ -67,11 +68,8 @@ gulp.task 'build:sass', (done) ->
         .pipe gulp.dest CSS_DIR
 
 gulp.task 'clean:sass', (done) ->
-    gulp.src [
-                CSS_DIR
-                SASS_CACHE
-            ], read: false
-        .pipe $.rimraf()
+    rimraf CSS_DIR, ->
+        rimraf SASS_CACHE, done
 
 gulp.task 'rebuild:sass', gulp.series('clean:sass', 'build:sass')
 
