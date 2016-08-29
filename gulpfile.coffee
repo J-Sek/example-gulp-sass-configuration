@@ -3,7 +3,7 @@ $ = require('gulp-load-plugins')()
 compass = require 'compass-importer'
 execSync = require('child_process').execSync
 watch = require 'glob-watcher'
-sassGraph = require 'gulp-sass-graph'
+FileCache = require 'gulp-file-cache'
 
 # ##########################
 # Constants
@@ -50,28 +50,50 @@ SASS_OUTPUT_STYLE = getArgument('--style') or 'expanded'
 gulp.task 'sass', (done) ->
     cleanAttributesSync CSS_DIR
 
-    sassLoadPaths = SASS_DIR
-    gulp.src SASS_FILES, base: SASS_DIR 
+    cache = new FileCache('.sass-cache')
+
+    gulp.src SASS_FILES, base: SASS_DIR
         .pipe $.plumber()
+        .pipe cache.filter()
+        .pipe cache.cache()
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
-            loadPath: sassLoadPaths
+            loadPath: SASS_DIR
         .on 'error', $.sass.logError
         .pipe gulp.dest CSS_DIR
 
 gulp.task 'watch_old', ->
     gulp.watch SASS_FILES, ['sass']
 
-gulp.task 'watch', ->
-    sassLoadPaths = SASS_DIR
+gulp.task 'watch:sass', ->
     $.watch SASS_DIR + '/**/*.scss'
         .pipe $.plumber()
-        .pipe sassGraph [sassLoadPaths]
-        .pipe $.sass 
+        .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
-            loadPath: sassLoadPaths
+            loadPath: SASS_DIR
         # .pipe $.notify 'Sass compiled <%= file.relative %>'
         .pipe gulp.dest CSS_DIR
         # .pipe livereload()
+
+# ##########################
+# Test
+#
+
+gulp.task 'copy-bootstrap', ->
+    gulp.src 'node_modules/bootstrap-sass/assets/stylesheets/**/*.*'
+        .pipe gulp.dest 'Content/Sass/base/bootstrap'
+
+gulp.task 'test', ->
+    gulp.src 'test/**/*.coffee', read: false
+        .pipe $.plumber()
+        # $.notify 'Tests failed <%= error.message %>'
+        .pipe $.mocha reporter: 'progress'
+
+gulp.task 'watch:test', ->
+    gulp.watch [
+        '*.js'
+        '*.coffee'
+        'test/**/*.coffee'
+    ], ['test']
