@@ -15,7 +15,8 @@ rimrafAsync = (path) ->
                 resolve()
 
 executeCompilation = (taskName, next) ->
-    pattern = new RegExp("Finished '#{taskName}' after ([0-9\.]+) s")
+    patternS = new RegExp("Finished '#{taskName}' after ([0-9\.]+) s")
+    patternMs = new RegExp("Finished '#{taskName}' after ([0-9]+) ms")
     gulp = spawn 'cmd', ['/K', 'node_modules\\.bin\\gulp build:sass --scope=\'base/_bootstrap\'']
 
     gulp.on 'exit', (code) ->
@@ -25,11 +26,15 @@ executeCompilation = (taskName, next) ->
 
     gulp.stdout.on 'data', (data) ->
         log("stdout: #{data}")
-        if pattern.test data
-            timeParsedFromGulpLog = parseFloat data.toString().match(pattern)[1]
-            # Terminate process
-            spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
-            next timeParsedFromGulpLog
+        if patternS.test data
+            timeParsedFromGulpLog = parseFloat data.toString().match(patternS)[1]
+        else if patternMs.test data
+            timeParsedFromGulpLog = parseFloat(data.toString().match(patternMs)[1]) / 1000
+        else
+            return
+        # Terminate process
+        spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
+        next timeParsedFromGulpLog
 
     gulp.stderr.on 'data', (data) ->
         log("stderr: #{data}")
@@ -65,8 +70,8 @@ describe '[Build]', ->
                     measureCompilation(taskName)
                     .then (secondRunTimes) ->
                 # Compare
-                        console.log "firstRunTime: #{firstRunTimes[1]} s"
-                        console.log "secondRunTime: #{secondRunTimes[1]} s"
+                        log "firstRunTime: #{firstRunTimes[1]} s"
+                        log "secondRunTime: #{secondRunTimes[1]} s"
                         ratio = secondRunTimes[1] / firstRunTimes[1]
                         expect(ratio).to.be.closeTo(0.1, 0.2)
 
