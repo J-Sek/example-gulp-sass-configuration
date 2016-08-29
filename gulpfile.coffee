@@ -4,6 +4,7 @@ compass = require 'compass-importer'
 execSync = require('child_process').execSync
 watch = require 'glob-watcher'
 sassGraph = require './gulp-sass-graph'
+FileCache = require 'gulp-file-cache'
 
 # ##########################
 # Constants
@@ -11,6 +12,7 @@ sassGraph = require './gulp-sass-graph'
 
 CSS_DIR = 'Content/Css'
 SASS_DIR = 'Content/Sass'
+SASS_CACHE = '.sass-cache'
 SASS_PATHS = [
     'Content/Sass/base/**/*.scss'
     '!Content/Sass/base/_bootstrap/**/*.scss'
@@ -47,18 +49,30 @@ SASS_OUTPUT_STYLE = getArgument('--style') or 'expanded'
 # Tasks
 #
 
-gulp.task 'sass', (done) ->
+gulp.task 'build:sass', (done) ->
     cleanAttributesSync CSS_DIR
 
-    sassLoadPaths = SASS_DIR
+    cache = new FileCache(SASS_CACHE)
+
     gulp.src SASS_FILES, base: SASS_DIR
         .pipe $.plumber()
+        .pipe cache.filter()
+        .pipe cache.cache()
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
-            loadPath: sassLoadPaths
+            loadPath: SASS_DIR
         .on 'error', $.sass.logError
         .pipe gulp.dest CSS_DIR
+
+gulp.task 'clean:sass', (done) ->
+    gulp.src [
+                CSS_DIR
+                SASS_CACHE
+            ], read: false
+        .pipe $.rimraf()
+
+gulp.task 'rebuild:sass', gulp.series('clean:sass', 'build:sass')
 
 gulp.task 'watch_old', ->
     gulp.watch SASS_FILES, ['sass']
@@ -71,7 +85,7 @@ gulp.task 'watch:sass', ->
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
-            loadPath: sassLoadPaths
+            loadPath: SASS_DIR
         # .pipe $.notify 'Sass compiled <%= file.relative %>'
         .pipe gulp.dest CSS_DIR
         # .pipe livereload()
@@ -80,11 +94,20 @@ gulp.task 'watch:sass', ->
 # Test
 #
 
-gulp.task 'test', ->
-    gulp.src 'test/**/*.coffee', read: false
-        .pipe $.plumber()
-        # $.notify 'Tests failed <%= error.message %>'
-        .pipe $.mocha reporter: 'progress'
+gulp.task 'copy:bootstrap', ->
+    gulp.src 'node_modules/bootstrap-sass/assets/stylesheets/**/*.*'
+        .pipe gulp.dest 'Content/Sass/base/_bootstrap'
+
+gulp.task 'test:cache', ->
+        gulp.src 'test/cachingTest.coffee', read: false
+            .pipe $.plumber()
+            # $.notify 'Tests failed <%= error.message %>'
+            .pipe $.mocha reporter: 'progress'
+
+gulp.task 'test', gulp.series.apply gulp, [
+        'copy:bootstrap'
+        'test:cache'
+    ]
 
 gulp.task 'watch:test', ->
     gulp.watch [
