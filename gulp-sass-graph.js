@@ -113,9 +113,9 @@ module.exports = function (loadPaths) {
 		});
 	});
 
-return {
-	graph: graph,
-	pipe: through.obj(function (file, enc, cb) {
+
+var pipeFn = function (conditions) {
+	return through.obj(function (file, enc, cb) {
 		if (file.isNull()) {
 			this.push(file);
 			return cb();
@@ -146,25 +146,46 @@ return {
 			}
 
 			if (relativePath.split('/').pop()[0] !== '_') {
-				console.log("processing %s", relativePath);
-				this.push(file);
+				if (!conditions || conditions (relativePath))
+				{
+					console.log("processing %s", relativePath);
+					this.push(file);
+				}
 			}
 
 			// push ancestors into the pipeline
 			visitAncestors(relativePath, function (node) {
-				console.log("processing %s", node.path)
 				//, which depends on %s", node.path, relativePath)
 				var ancestorPath = file.cwd + "\\" + node.path.replace(/\//g, '\\');
-				this.push(new File({
+				var ancestorFile = new File({
 					contents: new Buffer(fs.readFileSync(ancestorPath)),
 					cwd: file.cwd,
 					base: file.base,
 					path: node.path
-				}));
+				});
+				if (!conditions || conditions (node.path))
+				{
+					console.log("processing %s", node.path)
+					this.push(ancestorFile);
+				}
 			}.bind(this));
 
 			cb();
 		}.bind(this));
+	});
+}
+
+var alreadyPushed = {};
+
+return {
+	graph: graph,
+	endless: pipeFn(),
+	pipe: pipeFn(function(filePath) {
+		if (!alreadyPushed[filePath]) {
+			alreadyPushed[filePath] = true;
+			return true;
+		}
+		else return false;
 	})
 	};
 };

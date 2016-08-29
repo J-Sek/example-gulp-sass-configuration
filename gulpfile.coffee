@@ -58,6 +58,7 @@ gulp.task 'build:sass', (done) ->
         .pipe $.plumber()
         .pipe cache.filter()
         .pipe cache.cache()
+        .pipe sassGraph([SASS_DIR]).pipe
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
@@ -78,10 +79,9 @@ gulp.task 'watch_old', ->
     gulp.watch SASS_FILES, ['sass']
 
 gulp.task 'watch:sass', ->
-    sassLoadPaths = SASS_DIR
     $.watch SASS_DIR + '/**/*.scss'
         .pipe $.plumber()
-        .pipe sassGraph([sassLoadPaths]).pipe
+        .pipe sassGraph([SASS_DIR]).endless
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
@@ -94,19 +94,28 @@ gulp.task 'watch:sass', ->
 # Test
 #
 
+gulp.task 'test:unit', ->
+        gulp.src 'test/unitTest.coffee', read: false
+            # $.notify 'Tests failed <%= error.message %>'
+            .pipe $.mocha reporter: 'progress'
+
 gulp.task 'copy:bootstrap', ->
     gulp.src 'node_modules/bootstrap-sass/assets/stylesheets/**/*.*'
         .pipe gulp.dest 'Content/Sass/base/_bootstrap'
 
 gulp.task 'test:cache', ->
         gulp.src 'test/cachingTest.coffee', read: false
-            .pipe $.plumber()
-            # $.notify 'Tests failed <%= error.message %>'
+            .pipe $.mocha reporter: 'progress'
+
+gulp.task 'test:watch', ->
+        gulp.src 'test/watchingTest.coffee', read: false
             .pipe $.mocha reporter: 'progress'
 
 gulp.task 'test', gulp.series.apply gulp, [
+        'test:unit'
         'copy:bootstrap'
         'test:cache'
+        'test:watch'
     ]
 
 gulp.task 'watch:test', ->
@@ -114,4 +123,4 @@ gulp.task 'watch:test', ->
         '*.js'
         '*.coffee'
         'test/**/*.coffee'
-    ], ['test']
+    ], ['test:unit']
