@@ -14,9 +14,9 @@ rimrafAsync = (path) ->
             else
                 resolve()
 
-executeCompilation = (next) ->
-    pattern = /Finished 'sass' after ([0-9\.]+) s/
-    gulp = spawn 'cmd', ['/K', 'node_modules\\.bin\\gulp sass --scope=\'base/_bootstrap\'']
+executeCompilation = (taskName, next) ->
+    pattern = new RegExp("Finished '#{taskName}' after ([0-9\.]+) s")
+    gulp = spawn 'cmd', ['/K', 'node_modules\\.bin\\gulp build:sass --scope=\'base/_bootstrap\'']
 
     gulp.on 'exit', (code) ->
         if code > 1
@@ -35,10 +35,10 @@ executeCompilation = (next) ->
         log("stderr: #{data}")
         throw new Error 'Gulp process should not print any errors'
 
-measureCompilation = () ->
+measureCompilation = (taskName) ->
     new Promise (resolve, reject) ->
         startTime = new Date()
-        executeCompilation (loggedTime) ->
+        executeCompilation taskName, (loggedTime) ->
             log("resolve with #{loggedTime} s")
             endTime = new Date()
             elapsedTime = endTime - startTime
@@ -48,18 +48,21 @@ describe '[Build]', ->
     describe 'caching', ->
         it 'should run significantly faster if all files are already compiled', ->
             # Setup enviromnent
-            @timeout 15000
+            @timeout 30000
+
+            taskName = 'build:sass'
 
             rimrafAsync '.sass-cache'
             .then rimrafAsync 'Content/Css'
             .then ->
-                fs.writeFileSync 'Content/Sass/base/_bootstrap/big.scss', [0..40].map(-> "@import 'bootstrap';").join '\n'
+                fs.writeFileSync 'Content/Sass/base/_bootstrap/big.scss'
+                    , [0..40].map(-> "@import 'bootstrap';").join '\n'
 
                 # Measure first run
-                measureCompilation()
+                measureCompilation(taskName)
                 .then (firstRunTimes) ->
                 # Measure second run
-                    measureCompilation()
+                    measureCompilation(taskName)
                     .then (secondRunTimes) ->
                 # Compare
                         console.log "firstRunTime: #{firstRunTimes[1]} s"
