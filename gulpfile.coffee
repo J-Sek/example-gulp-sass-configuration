@@ -67,7 +67,7 @@ gulp.task 'watch:sass', ->
     sassLoadPaths = SASS_DIR
     $.watch SASS_DIR + '/**/*.scss'
         .pipe $.plumber()
-        .pipe sassGraph [sassLoadPaths]
+        .pipe sassGraph([sassLoadPaths]).pipe
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE

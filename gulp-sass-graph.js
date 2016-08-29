@@ -60,29 +60,37 @@ module.exports = function (loadPaths) {
 
 	// parses the imports from sass
 	var sassImports = function (content) {
-		var re = /\@import (["'])(.+?)\1;/g, match = {}, results = [];
+		var re = /\@import (["'])(.+?)\1;/g,
+			match = {},
+			results = [];
 
 		// strip comments
 		content = new String(content).replace(/\/\*.+?\*\/|\/\/.*(?=[\n\r])/g, '');
 
 		// extract imports
+		var importArgument, filePath;
 		while (match = re.exec(content)) {
-			results.push(match[2]);
+			importArgument = match[2];
+			filePath = importArgument.replace(/^\.\//,'');
+			results.push(filePath);
 		}
 
 		return results
-			.filter(function (x) {
-				return x !== 'compass';
-			})
-			.filter(function (x) {
-				return !/compass\/.*/.test(x);
-			});
+			.filter(function (x) { return x !== 'compass'; })
+			.filter(function (x) { return !/compass\/.*/.test(x); });
 	};
 
 	// resolve a relative path to an absolute path
 	var sassResolve = function (path, loadPaths) {
 		for (var p in loadPaths) {
-			var scssPath = loadPaths[p] + "/" + path + ".scss"
+			var scssPath =
+				(loadPaths[p] + "/" + path + (/\.scss$/i.test(path) ? "" : ".scss"))
+					.replace(/[^\.\/]+\/\.\.\//g, '')
+					.replace(/[^\.\/]+\/\.\.\//g, '')
+					.replace(/[^\.\/]+\/\.\.\//g, '')
+					; // cleanup path from "abc/../"
+
+
 			if (fs.existsSync(scssPath)) {
 				return scssPath;
 			}
@@ -105,7 +113,9 @@ module.exports = function (loadPaths) {
 		});
 	});
 
-	return through.obj(function (file, enc, cb) {
+return {
+	graph: graph,
+	pipe: through.obj(function (file, enc, cb) {
 		if (file.isNull()) {
 			this.push(file);
 			return cb();
@@ -155,5 +165,6 @@ module.exports = function (loadPaths) {
 
 			cb();
 		}.bind(this));
-	});
+	})
+	};
 };

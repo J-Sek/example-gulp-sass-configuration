@@ -1,8 +1,6 @@
-// TODO: support missing underline e.g. @import 'colors';
-
 @import '_colors';
 @import './_fonts';
-// TODO: support ../ e.g. @import '../_settings';
+@import '../settings';
 
 @import 'compass';
 // @import 'compass/css/user-interface';
@@ -12,5 +10,6 @@ body {
     background: $bg-color;
     color: $default-color;
     font-family: $base-font;
+    font-size: $base-font-size;
     @include box-sizing(border-box);
 }

@@ -3,11 +3,6 @@ rimraf = require 'rimraf'
 expect = require('chai').expect
 spawn = require('child_process').spawn
 
-# describe '[example]', ->
-#     describe 'test', ->
-#         it 'should work as expected', ->
-#             expect(true).to.equal(true)
-
 log = () ->
 # log = console.log
 
@@ -51,8 +46,6 @@ testWatching = ({partialPath, content, changeFn, expectFn, next, delay}) ->
                     newContent = fs.readFileSync 'Content/Css/base/demo.css', 'utf8'
                     expectFn(newContent)
                 catch err
-                    console.log 'Error:', _err
-
                     _err = err
                 finally
                     # Terminate watching process
@@ -80,7 +73,6 @@ describe '[Watch]', ->
                 next: done
                 delay: 5000
 
-    describe 'parsing imports', ->
         it 'should normalize relative import path', (done) ->
             @timeout 14000
 
@@ -92,5 +84,18 @@ describe '[Watch]', ->
                 '''
                 changeFn: (content) -> content.replace 'Open Sans', 'Raleway'
                 expectFn: (content) -> expect(content).to.contain('Raleway')
+                next: done
+                delay: 5000
+
+        it 'should normalize ../ in import path', (done) ->
+            @timeout 14000
+
+            testWatching
+                partialPath: 'Content/Sass/_settings.scss'
+                content: '''
+                $base-font-size: 16px !default;
+                '''
+                changeFn: (content) -> content.replace '16px', '20px'
+                expectFn: (content) -> expect(content).to.contain('font-size: 20px')
                 next: done
                 delay: 5000
