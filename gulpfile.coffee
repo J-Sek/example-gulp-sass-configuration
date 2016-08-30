@@ -75,8 +75,8 @@ gulp.task 'clean:sass', (done) ->
 
 gulp.task 'rebuild:sass', gulp.series('clean:sass', 'build:sass')
 
-gulp.task 'watch_old', ->
-    gulp.watch SASS_FILES, ['sass']
+gulp.task 'watch:sass:old', ->
+    gulp.watch SASS_FILES, gulp.series 'build:sass'
 
 gulp.task 'watch:sass', ->
     $.watch SASS_DIR + '/**/*.scss'

@@ -4,7 +4,7 @@ expect = require('chai').expect
 spawn = require('child_process').spawn
 
 log = () ->
-# log = console.log
+#log = console.log
 
 testWatching = ({partialPath, content, changeFn, expectFn, next, delay}) ->
 
@@ -25,35 +25,36 @@ testWatching = ({partialPath, content, changeFn, expectFn, next, delay}) ->
                 throw new Error 'Gulp process exited with code ' + code
             log 'Gulp process closed'
 
-        gulp.stdout.on 'data', (data) -> log("stdout: #{data}")
+        gulp.stdout.on 'data', (data) ->
+            log("stdout: #{data}")
+
         gulp.stderr.on 'data', (data) ->
             log("stderr: #{data}")
             throw new Error 'Gulp process should not print any errors'
 
+        onFinished = ->
+            log("Reading demo.scss")
+            _err = null
+            try
+                expect(-> fs.accessSync 'Content/Css/base/demo.css').to.not.throw(Error)
+                fs.accessSync 'Content/Css/base/demo.css'
+                newContent = fs.readFileSync 'Content/Css/base/demo.css', 'utf8'
+                expectFn(newContent)
+            catch err
+                _err = err
+            finally
+                # Terminate watching process
+                spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
+
+            throw _err if _err
+            next()
+
         # Wait in stdout and verify output
         setTimeout ->
-
             # Change something
             fs.writeFileSync partialPath, partialNewContent, 'utf8'
-
-            log("Waiting 6000ms for demo.scss")
-            setTimeout ->
-                log("Reading demo.scss")
-                _err = null
-                try
-                    expect(-> fs.accessSync 'Content/Css/base/demo.css').to.not.throw(Error)
-                    fs.accessSync 'Content/Css/base/demo.css'
-                    newContent = fs.readFileSync 'Content/Css/base/demo.css', 'utf8'
-                    expectFn(newContent)
-                catch err
-                    _err = err
-                finally
-                    # Terminate watching process
-                    spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
-
-                throw _err if _err
-                next()
-            , delay
+            log("Waiting #{delay}ms for demo.scss")
+            setTimeout onFinished, delay
         , delay
 
 
