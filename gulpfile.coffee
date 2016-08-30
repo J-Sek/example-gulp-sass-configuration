@@ -59,7 +59,7 @@ gulp.task 'build:sass', (done) ->
         .pipe $.plumber()
         .pipe cache.filter()
         .pipe cache.cache()
-        .pipe sassGraph([SASS_DIR]).pipe
+        .pipe sassGraph([SASS_DIR]).singleRun
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
