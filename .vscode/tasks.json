@@ -1,8 +1,24 @@
 {
     "version": "0.1.0",
-    "command": "coffee",
+    "command": "npm",
     "isShellCommand": true,
-    "args": ["-bcwm", "gulpfile.coffee"],
     "showOutput": "always",
-    "isWatching": true
+    "tasks": [
+        {
+            "taskName": "test",
+            "isTestCommand": true
+        },
+        {
+            "taskName": "install"
+        },
+        {
+            "taskName": "start",
+            "isBuildCommand": true,
+            "problemMatcher": "$gulp-tsc"
+        },
+        {
+            "taskName": "watch",
+            "isWatching": true
+        }
+    ]
 }

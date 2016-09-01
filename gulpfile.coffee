@@ -6,6 +6,7 @@ watch = require 'glob-watcher'
 sassGraph = require './gulp-sass-graph'
 FileCache = require 'gulp-file-cache'
 del = require 'del'
+{normalize} = require 'path'
 
 # ##########################
 # Constants
@@ -31,12 +32,13 @@ parseArgumentValue = (pattern) ->
     return args.match(valueRegExp)[1] if valueRegExp.test(args)
 
 getArgument = (flag, wrapFn) ->
-    value = parseArgumentValue(flag + "=[']([^']*)[']")
+    value = parseArgumentValue(flag + "=['\"]?([^']*)['\"]?")
     return unless value
     if wrapFn then wrapFn(value) else value
 
 cleanAttributesSync = (path) ->
-    execSync("attrib -r " + path + "\\*.* /s");
+    if /^win/.test(process.platform)
+        execSync("attrib -r " + path + "\\*.* /s");
 
 
 # ##########################

@@ -1,10 +1,10 @@
 fs = require 'fs'
 rimraf = require 'rimraf'
 expect = require('chai').expect
-spawn = require('child_process').spawn
+{shell} = require 'execa'
 
 log = () ->
-#log = console.log
+# log = console.log
 
 testWatching = ({partialPath, content, changeFn, expectFn, next, delay}) ->
 
@@ -18,18 +18,13 @@ testWatching = ({partialPath, content, changeFn, expectFn, next, delay}) ->
         fs.writeFileSync partialPath, partialContent, 'utf8'
 
         # Exec 'gulp watch'
-        gulp = spawn 'cmd', ['/K', 'node_modules\\.bin\\gulp watch:sass']
+        gulp = shell 'gulp watch:sass'
 
-        gulp.on 'exit', (code) ->
-            if code > 1
-                throw new Error 'Gulp process exited with code ' + code
-            log 'Gulp process closed'
+        gulp.then ({stdout}) ->
+            log("stdout: #{stdout}")
 
-        gulp.stdout.on 'data', (data) ->
-            log("stdout: #{data}")
-
-        gulp.stderr.on 'data', (data) ->
-            log("stderr: #{data}")
+        gulp.catch (err) ->
+            log("stderr: #{err}")
             throw new Error 'Gulp process should not print any errors'
 
         onFinished = ->
@@ -44,7 +39,9 @@ testWatching = ({partialPath, content, changeFn, expectFn, next, delay}) ->
                 _err = err
             finally
                 # Terminate watching process
-                spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
+                # shell 'taskkill', ['/F','/T','/PID',gulp.pid]
+                # shell "kill -9 #{gulp.pid}"
+                gulp.kill()
 
             throw _err if _err
             next()

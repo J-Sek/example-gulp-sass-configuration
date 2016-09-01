@@ -1,7 +1,7 @@
 fs = require 'fs'
 rimraf = require 'rimraf'
 expect = require('chai').expect
-spawn = require('child_process').spawn
+{shell} = require 'execa'
 
 log = () ->
 #log = console.log
@@ -17,28 +17,25 @@ rimrafAsync = (path) ->
 executeCompilation = (taskName, next) ->
     patternS = new RegExp("Finished '#{taskName}' after ([0-9\.]+) s")
     patternMs = new RegExp("Finished '#{taskName}' after ([0-9]+) ms")
-    gulp = spawn 'cmd', ['/K', 'node_modules\\.bin\\gulp build:sass --scope=\'base/_bootstrap\'']
+    gulp = shell 'gulp build:sass --scope=\'base/_bootstrap\''
 
-    gulp.on 'exit', (code) ->
-        if code > 1
-            throw new Error 'Gulp process exited with code ' + code
-        log 'Gulp process finished'
-
-    gulp.stdout.on 'data', (data) ->
-        log("stdout: #{data}")
-        if patternS.test data
-            timeParsedFromGulpLog = parseFloat data.toString().match(patternS)[1]
-        else if patternMs.test data
-            timeParsedFromGulpLog = parseFloat(data.toString().match(patternMs)[1]) / 1000
+    gulp.then ({stdout}) ->
+        log("stdout: #{stdout}")
+        if patternS.test stdout
+            timeParsedFromGulpLog = parseFloat stdout.toString().match(patternS)[1]
+        else if patternMs.test stdout
+            timeParsedFromGulpLog = parseFloat(stdout.toString().match(patternMs)[1]) / 1000
         else
             return
-        # Terminate process
-        spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
+        # Terminate process (if windows?)
+        # spawn 'taskkill', ['/F','/T','/PID',gulp.pid]
+        # shell "kill -9 #{gulp.pid}"
         next timeParsedFromGulpLog
 
-    gulp.stderr.on 'data', (data) ->
-        log("stderr: #{data}")
+    gulp.catch (err) ->
+        log("stderr: #{err}")
         throw new Error 'Gulp process should not print any errors'
+    return
 
 measureCompilation = (taskName) ->
     new Promise (resolve, reject) ->
@@ -61,7 +58,7 @@ describe '[Build]', ->
             .then rimrafAsync 'Content/Css'
             .then ->
                 fs.writeFileSync 'Content/Sass/base/_bootstrap/big.scss'
-                    , [0..40].map(-> "@import 'bootstrap';").join '\n'
+                    , [0..15].map(-> "@import 'bootstrap';").join '\n'
 
                 # Measure first run
                 measureCompilation(taskName)

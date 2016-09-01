@@ -4,8 +4,8 @@
   "description": "Example of efficient gulp-sass configuration",
   "main": "index.js",
   "scripts": {
-    "run": "gulp sass",
-    "watch": "gulp watch",
+    "start": "gulp build:sass",
+    "watch": "gulp watch:sass",
     "test": "mocha test/*.coffee"
   },
   "author": "",
@@ -16,6 +16,7 @@
     "coffee-script": "1.10.0",
     "compass-importer": "0.4.1",
     "del": "2.2.2",
+    "execa": "0.4.0",
     "gulp": "git://github.com/gulpjs/gulp.git#4.0",
     "gulp-file-cache": "0.0.1",
     "gulp-load-plugins": "1.2.4",

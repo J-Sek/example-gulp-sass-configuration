@@ -127,7 +127,7 @@ module.exports = (loadPaths) ->
 
 				# push ancestors into the pipeline
 				visitAncestors relativePath, (node) =>
-					ancestorPath = "#{file.cwd}\\#{node.path.replace(/\//g, '\\')}"
+					ancestorPath = path.normalize "#{file.cwd}/#{node.path}"
 					ancestorFile = new File
 						contents: new Buffer(fs.readFileSync(ancestorPath))
 						cwd: file.cwd
