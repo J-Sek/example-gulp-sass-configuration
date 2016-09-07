@@ -23,6 +23,7 @@
     "gulp-mocha": "3.0.1",
     "gulp-plumber": "1.1.0",
     "gulp-sass": "2.3.2",
+    "gulp-sass-dynamic-importer": "0.0.3",
     "gulp-watch": "4.3.9",
     "rimraf": "2.5.4"
   }

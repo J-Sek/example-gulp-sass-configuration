@@ -3,7 +3,6 @@ $ = require('gulp-load-plugins')()
 compass = require 'compass-importer'
 execSync = require('child_process').execSync
 watch = require 'glob-watcher'
-sassGraph = require './gulp-sass-graph'
 FileCache = require 'gulp-file-cache'
 del = require 'del'
 {normalize} = require 'path'
@@ -61,7 +60,7 @@ gulp.task 'build:sass', (done) ->
         .pipe $.plumber()
         .pipe cache.filter()
         .pipe cache.cache()
-        .pipe sassGraph([SASS_DIR]).singleRun
+        .pipe $.sassDynamicImporter dir: SASS_DIR
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
@@ -83,7 +82,7 @@ gulp.task 'watch:sass:old', ->
 gulp.task 'watch:sass', ->
     $.watch SASS_DIR + '/**/*.scss'
         .pipe $.plumber()
-        .pipe sassGraph([SASS_DIR]).endless
+        .pipe $.sassDynamicImporter dir: SASS_DIR, endless: true
         .pipe $.sass
             importer: compass
             outputStyle: SASS_OUTPUT_STYLE
