@@ -1,2 +1,9 @@
 @import url('//fonts.googleapis.com/css?family=Open+Sans');
+@import '../settings';
+@import 'colors';
 $base-font: 'Raleway', sans-serif;
+body {
+    color: $default-color;
+    font-family: $base-font;
+    font-size: $base-font-size;
+}

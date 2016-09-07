@@ -1,6 +1,5 @@
 @import '_colors';
 @import './_fonts';
-@import '../settings';
 
 @import 'compass';
 // @import 'compass/css/user-interface';
@@ -8,8 +7,7 @@
 
 body {
     background: $bg-color;
-    color: $default-color;
-    font-family: $base-font;
-    font-size: $base-font-size;
     @include box-sizing(border-box);
 }
+
+@import './_fonts';

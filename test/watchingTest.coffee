@@ -77,8 +77,15 @@ describe '[Watch]', ->
             testWatching
                 partialPath: 'Content/Sass/base/_fonts.scss'
                 content: '''
-                    @import url(\'//fonts.googleapis.com/css?family=Open+Sans\');
-                    $base-font: \'Open Sans\', sans-serif;
+                    @import url('//fonts.googleapis.com/css?family=Open+Sans');
+                    @import '../settings';
+                    @import 'colors';
+                    $base-font: 'Raleway', sans-serif;
+                    body {
+                        color: $default-color;
+                        font-family: $base-font;
+                        font-size: $base-font-size;
+                    }
                 '''
                 changeFn: (content) -> content.replace 'Open Sans', 'Raleway'
                 expectFn: (content) -> expect(content).to.contain('Raleway')

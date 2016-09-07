@@ -1,10 +1,10 @@
 expect = require('chai').expect
-sassGraph = require '../gulp-sass-graph'
+#sassGraph = require '../gulp-sass-graph'
 
 log = () ->
 # log = console.log
 
-describe '[Imports parser]', ->
+xdescribe '[Imports parser]', ->
     sut = null
     beforeEach ->
         sut = sassGraph ['Content/Sass']
@@ -21,4 +21,3 @@ describe '[Imports parser]', ->
             partialPath = 'Content/Sass/_settings.scss'
             expect(sut.graph[filePath]).to.exist;
             expect(sut.graph[filePath].imports).to.include(partialPath);
-
